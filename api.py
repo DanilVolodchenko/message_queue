@@ -1,8 +1,11 @@
 from typing import Annotated, Mapping
 
-from fastapi import APIRouter, Path, Body
+import jwt
+from fastapi import APIRouter, Path, Body, Header, HTTPException
 from commands import InterpretCommand
+from dotenv import dotenv_values
 
+config = dotenv_values('.env')
 router = APIRouter()
 
 
@@ -14,8 +17,14 @@ def add_command(
         game_id: Annotated[int, Path(title='id игры')],
         game_item_id: Annotated[int, Path(title='id объекта, которому будет применена команда')],
         command_id: Annotated[int, Path(title='id команды')],
-        kwargs: Annotated[Mapping, Body(default_factory=dict, title='id объекта, которому будет применена команда')]
+        kwargs: Annotated[Mapping, Body(default_factory=dict, title='id объекта, которому будет применена команда')],
+        token: Annotated[str, Header(title='JWT токен')],
 ):
+    try:
+        jwt.decode(token, config['SECRET_KEY'], algorithms=['HS256'])
+    except Exception:
+        raise HTTPException(status_code=403, detail='Invalid JWT token')
+
     try:
         return InterpretCommand(game_id, game_item_id, command_id, kwargs).execute()
     except Exception as exc:
