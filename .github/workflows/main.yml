@@ -27,5 +27,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Create .env file
+        run: |
+          echo "SECRET_KEY=test_secret_key_for_github_actions" > .env
+
       - name: Test with pytest
         run: python -m pytest -svv
